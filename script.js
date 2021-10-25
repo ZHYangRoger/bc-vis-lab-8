@@ -39,16 +39,43 @@ async function main(){
     const xAxis = d3.axisBottom()
 	                .scale(xScale);
     const yAxis = d3.axisLeft()
-	                .scale(yScale);
+	                .scale(yScale)
+                    .ticks(12, "$.2f");
 
     svg.append("g")
         .attr("class", "axis x-axis")
         .attr("transform", `translate(0, ${height})`)
-        .call(xAxis);
+        .call(xAxis)
+        .call(g => g.select(".domain").remove())
+        .call(g => g.selectAll(".tick line")
+                    .clone()
+                    .attr("y2", -height)
+                    .attr("stroke-opacity", 0.1));
+
     svg.append("g")
         .attr("class", "axis y-axis")
         .attr("transform", `translate(0, ${width}`)
-        .call(yAxis);
+        .call(yAxis)
+        .call(g => g.select(".domain").remove())
+        .call(g => g.selectAll(".tick line")
+                    .clone()
+                    .attr("x2", width)
+                    .attr("stroke-opacity", 0.1));
+
+    //line
+    const line = d3.line()
+                    .curve(d3.curveCatmullRom)
+                    .x(d => xScale(d.miles))
+                    .y(d => yScale(d.gas))
+
+    svg.append("path")
+        .datum(data)
+        .attr("fill", "none")
+        .attr("stroke", "black")
+        .attr("stroke-width", 2.5)
+        .attr("stroke-linejoin", "round")
+        .attr("stroke-linecap", "round")
+        .attr("d", line);
 
     //circles and labels
     svg.selectAll("scatter-plot")
@@ -73,14 +100,16 @@ async function main(){
         .call(halo)
 
     svg.append("text")
-        .attr('x', 570)
+        .attr('x', 565)
         .attr('y', 605)
         .text("Miles per person per year")
+        .attr("font-weight", "bold")
 
     svg.append("text")
         .attr('x', 3)
         .attr('y', 0)
         .text("Cost per gallon")
+        .attr("font-weight", "bold")
 
     function position(d) {
         const t = d3.select(this);
